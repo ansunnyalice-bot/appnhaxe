@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nhà Xe Trung Kén - Hệ Thống Quản Lý</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+:root { --primary:#e67e22; --dark:#2c3e50; }
+body { background:#f8f9fa; font-family:Segoe UI,Tahoma,Verdana; }
+.section{display:none;padding:30px 0}
+.section.active{display:block}
+.card{border-radius:15px;box-shadow:0 5px 15px rgba(0,0,0,.05)}
+.btn-primary{background:var(--primary);border:none}
+</style>
+</head>
+
+<body>
+
+<nav class="navbar navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="#" onclick="location.reload()">NHÀ XE TRUNG KÉN</a>
+    <div class="dropdown">
+      <button class="btn btn-outline-light btn-sm dropdown-toggle" data-bs-toggle="dropdown">Chế độ xem</button>
+      <ul class="dropdown-menu">
+        <li><a class="dropdown-item" onclick="showSection('register-section')">Khách hàng</a></li>
+        <li><a class="dropdown-item" onclick="showSection('admin-section')">Quản trị</a></li>
+        <li><a class="dropdown-item" onclick="showSection('driver-section')">Tài xế</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+<!-- ===== ĐĂNG KÝ ===== -->
+<div id="register-section" class="section active">
+<div class="row justify-content-center">
+<div class="col-md-5">
+<div class="card p-4">
+<h4 class="text-center">Đăng ký</h4>
+<input id="reg_name" class="form-control mb-2" placeholder="Tên">
+<input class="form-control mb-2" placeholder="SĐT">
+<input type="password" class="form-control mb-3" placeholder="Mật khẩu">
+<button class="btn btn-primary w-100" onclick="showSection('login-section')">Tiếp tục</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ===== ĐĂNG NHẬP ===== -->
+<div id="login-section" class="section">
+<div class="row justify-content-center">
+<div class="col-md-5">
+<div class="card p-4">
+<h4 class="text-center text-warning">Đăng nhập</h4>
+<input class="form-control mb-2" placeholder="SĐT">
+<input type="password" class="form-control mb-3" placeholder="Mật khẩu">
+<button class="btn btn-dark w-100" onclick="showSection('user-dashboard')">Vào hệ thống</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ===== KHÁCH HÀNG ===== -->
+<div id="user-dashboard" class="section">
+<div class="row g-4">
+<div class="col-md-8">
+<div class="card p-4">
+
+<h4>Hành trình</h4>
+<div class="row g-2">
+<div class="col-md-6">
+<input id="pickup" class="form-control" placeholder="Điểm đi">
+</div>
+<div class="col-md-6">
+<input id="dropoff" class="form-control" placeholder="Điểm đến">
+</div>
+</div>
+
+<div class="mt-3">
+<div id="userMap" style="height:300px;border-radius:10px"></div>
+<p id="routeInfo" class="fw-bold text-primary mt-2"></p>
+</div>
+
+<button class="btn btn-primary w-100 mt-3 py-2"
+onclick="alert('Đặt xe thành công!')">
+XÁC NHẬN ĐẶT XE
+</button>
+
+</div>
+</div>
+
+<div class="col-md-4">
+<div class="card p-4">
+<h5>Tài xế</h5>
+<p>Tên: <b>Nguyễn Văn Trung</b></p>
+<p>Giá: <b>350.000đ</b></p>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ===== ADMIN ===== -->
+<div id="admin-section" class="section">
+<div class="card p-4">
+<h4>Quản trị viên</h4>
+<p>Demo dữ liệu</p>
+</div>
+</div>
+
+<!-- ===== TÀI XẾ ===== -->
+<div id="driver-section" class="section">
+<div class="card p-4">
+<h4>Khu vực tài xế</h4>
+<div id="driverMap" style="height:200px;border-radius:10px"></div>
+<button class="btn btn-success w-100 mt-3">HOÀN THÀNH</button>
+</div>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+function showSection(id){
+document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+}
+
+let map, directionsService, directionsRenderer;
+let pickupPlace, dropoffPlace;
+
+function initMaps(){
+const pickupAuto=new google.maps.places.Autocomplete(document.getElementById("pickup"));
+const dropoffAuto=new google.maps.places.Autocomplete(document.getElementById("dropoff"));
+
+map=new google.maps.Map(document.getElementById("userMap"),{
+center:{lat:16.047,lng:108.206},zoom:6
+});
+
+directionsService=new google.maps.DirectionsService();
+directionsRenderer=new google.maps.DirectionsRenderer({map});
+
+pickupAuto.addListener("place_changed",()=>{
+pickupPlace=pickupAuto.getPlace();drawRoute();
+});
+dropoffAuto.addListener("place_changed",()=>{
+dropoffPlace=dropoffAuto.getPlace();drawRoute();
+});
+
+new google.maps.Map(document.getElementById("driverMap"),{
+center:{lat:21.028,lng:105.804},zoom:12
+});
+}
+
+function drawRoute(){
+if(!pickupPlace||!dropoffPlace)return;
+
+directionsService.route({
+origin:pickupPlace.geometry.location,
+destination:dropoffPlace.geometry.location,
+travelMode:'DRIVING'
+},(res,status)=>{
+if(status==="OK"){
+directionsRenderer.setDirections(res);
+const leg=res.routes[0].legs[0];
+document.getElementById("routeInfo").innerText=
+`📏 ${leg.distance.text} – ⏱ ${leg.duration.text}`;
+}
+});
+}
+</script>
+
+<script async defer
+src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&callback=initMaps">
+</script>
+
+</body>
+</html>
